@@ -55,3 +55,99 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 	- Some packages (e.g. `torch`, `xgboost`, `lightgbm`) are large and may take several minutes to download and install.
 	- On Windows, if binary wheel installation fails, consider using a Conda environment or installing prebuilt wheels for those packages.
 
+## Project overview
+
+Praeventix EWS (Early Warning System) is a demo Next.js frontend backed by a BentoML + FastAPI service that scores customer risk, provides interventions, and exposes model-driven endpoints used by the UI.
+
+## Prerequisites
+
+- Node.js (recommended v18+)
+- npm (bundled with Node)
+- Python 3.10+ (3.14 used in this workspace) with `pip`
+- Optional: `conda` for easier native binary installs on Windows
+
+## Quickstart
+
+1. Clone the repo and open it in a terminal.
+2. Start the frontend and backend in separate terminals (see detailed steps below).
+
+## Frontend (Next.js)
+
+- From the project root:
+
+```powershell
+npm install
+npm run dev
+# Open http://localhost:3000
+```
+
+- Notes:
+	- If `npm install` fails due to locked files on Windows, remove `node_modules` and try again:
+		- PowerShell: `if (Test-Path node_modules) { Remove-Item node_modules -Recurse -Force }`
+	- The Next.js dev server provides fast-refresh and logs to the terminal.
+
+## Backend (BentoML + FastAPI)
+
+- Recommended: create a Python virtual environment to avoid polluting global packages:
+
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1   # PowerShell
+python -m pip install --upgrade pip
+python -m pip install -r backend/requirements.txt
+```
+
+- Start the BentoML service from `backend`:
+
+```powershell
+cd backend
+python -m bentoml serve service:BankRiskService --port 8000
+# BentoML UI: http://127.0.0.1:8000
+```
+
+- Common issues & tips:
+	- Large packages such as `torch`, `xgboost`, and `lightgbm` may take time or fail on Windows; using `conda` often simplifies installation:
+		- `conda create -n ews python=3.10 -y && conda activate ews`
+		- Then `pip install -r backend/requirements.txt` (or use `conda install` for specific wheels).
+	- If scripts are installed to `...\Scripts` and the folder is not on PATH, that's safe for running from the venv; warnings appearing during `pip install` are informational.
+
+## API examples
+
+- List customers (example):
+
+```bash
+curl -X POST http://127.0.0.1:8000/list_customers -H "Content-Type: application/json" -d '{"limit":10}'
+```
+
+- Analyze a customer risk (example):
+
+```bash
+curl -X POST http://127.0.0.1:8000/analyze_customer_risk -H "Content-Type: application/json" -d '{"customer_id":"12345"}'
+```
+
+Check the BentoML Swagger UI at `http://127.0.0.1:8000/docs` for full request/response schemas.
+
+## Database and data
+
+- The project uses lightweight SQLite files under `backend/` for demo data (files: `bank_risk.db`, `bank_risk(1).db`, etc.).
+- Use `backend/setup_db.py` or `ingest_csv_to_db.py` to refresh or recreate demo data as needed.
+
+## Testing
+
+- Backend tests: run `python -m pytest backend/test_api_endpoints.py` (if `pytest` is installed) or run included test scripts in `backend/`.
+- Frontend tests: not included by default — add `jest` or preferred test runner if needed.
+
+## Contributing
+
+- Fork and open a PR with a clear description. Keep changes small and test locally before submitting.
+
+## Troubleshooting
+
+- Frontend shows "Could not fetch dashboard statistics": ensure backend is running at `http://127.0.0.1:8000` and CORS is allowed.
+- If `bentoml` import fails, verify the Python environment and `pip install -r backend/requirements.txt` completed successfully.
+
+## Contacts
+
+- For local dev help, open an issue or reach out to the project owner listed in this repo.
+
+
